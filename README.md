@@ -1,36 +1,134 @@
-# End-of-Turn (EOT) Detection for Voice AI
+# End-of-Turn (EOT) Detection
 
 ## Overview
-Every conversational Voice AI agent needs to know when a human is done speaking and not just pausing to think. If the agent jumps in too early, it interrupts the user. If it waits too long, the conversation feels laggy and awkward. 
 
-This project solves that by building a machine learning model from scratch to predict the probability that a turn has ended using causal audio features.
+This project builds a lightweight machine learning model from scratch to predict the probability that a speaker has finished talking (End-of-Turn Detection). The objective is to reduce the response latency of a Voice AI assistant while keeping the interruption rate below an acceptable threshold.
+
+Unlike traditional Voice Activity Detection (VAD), which relies primarily on detecting silence, our approach analyzes causal acoustic features from the speech immediately preceding a pause. This enables the system to identify natural sentence endings significantly earlier, resulting in faster and more natural conversations.
+
+---
 
 ## How the Model Works
-Standard Voice Activity Detection usually just looks for silence, which forces the system to wait around 1.6 seconds to be sure the person isn't just taking a breath. 
 
-Instead of just measuring silence, this model looks at how the person stopped speaking. It analyzes the 1.5 seconds of audio right before the pause to check the pitch and energy slopes. Because human speech naturally trails off at the end of a sentence, the model can detect this drop and confidently predict that the turn is over. We used a Random Forest Classifier trained on both English and Hindi datasets so it learns universal speech patterns rather than just memorizing one language.
+Traditional Voice Activity Detection systems wait for a long period of silence (typically around **1.6 seconds**) before assuming that a speaker has finished talking. This conservative approach prevents interruptions but introduces noticeable response latency.
+
+Our approach instead analyzes the **last 1.5 seconds of speech before a pause** and extracts causal audio features such as:
+
+- Pitch trajectory
+- Energy contour
+- Pitch slope
+- Energy slope
+- Speaking dynamics before silence
+
+Human speech naturally exhibits a gradual decrease in pitch and energy near the end of an utterance. By learning these patterns, the model predicts whether the current pause marks the end of a conversational turn instead of simply measuring silence duration.
+
+The extracted features are used to train a **Random Forest Classifier** on both **English** and **Hindi** speech datasets, enabling the model to learn language-independent end-of-turn characteristics rather than language-specific patterns.
+
+---
 
 ## Results
-The goal was to lower the response delay as much as possible while keeping the interruption rate under 5%. 
 
-The basic silence-timer baseline had a response delay of 1600 ms. Our custom model managed to cut that down to about 521 ms. This means the Voice AI responds a full second faster without cutting people off.
+The primary objective was to minimize response delay while maintaining an interruption rate below **5%**.
 
-## Project Files
-- train.py: Extracts the audio features, trains the model, and saves it.
-- predict.py: Loads the saved model and makes predictions on new data.
-- score.py: Simulates a live voice agent to test the model's delay and interruption rate.
-- features.py: Contains the audio processing math to get pitch and energy.
+| Metric | Baseline | Proposed Model |
+|--------|---------:|---------------:|
+| Response Delay | **1600 ms** | **521 ms** |
+| Improvement | — | **≈67% reduction** |
+
+Our model reduces Voice AI response latency by approximately **1 second** compared to a traditional silence-based approach while maintaining a low interruption rate.
+
+---
+
+## Project Structure
+
+```
+.
+├── train.py              # Feature extraction and model training
+├── predict.py            # Generate predictions using the trained model
+├── score.py              # Evaluate latency and interruption rate
+├── features.py           # Audio feature extraction utilities
+├── requirements.txt
+├── data/
+│   ├── english/
+│   └── hindi/
+├── outputs/
+└── README.md
+```
+
+---
+## Requirements
+
+Install the required Python packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
 
 ## How to Run
 
-First, install the needed libraries by running:
-`pip install -r requirements.txt`
+### 1. Train the model
 
-To train the model on the provided data, run:
-`python train.py --data_dirs data/english data/hindi`
+Train using both English and Hindi datasets.
 
-To generate predictions for the English dataset, run:
-`python predict.py --data_dir data/english --out outputs/english_predictions.csv`
+```bash
+python train.py --data_dirs data/english data/hindi
+```
 
-To test the performance and see your final score, run:
-`python score.py --data_dir data/english --pred outputs/english_predictions.csv`
+---
+
+### 2. Generate predictions
+
+Generate predictions for the English dataset.
+
+```bash
+python predict.py \
+    --data_dir data/english \
+    --out outputs/english_predictions.csv
+```
+
+Generate predictions for the Hindi dataset.
+
+```bash
+python predict.py \
+    --data_dir data/hindi \
+    --out outputs/hindi_predictions.csv
+```
+
+---
+
+### 3. Evaluate the model
+
+Evaluate on the English dataset.
+
+```bash
+python score.py \
+    --data_dir data/english \
+    --pred outputs/english_predictions.csv
+```
+
+Evaluate on the Hindi dataset.
+
+```bash
+python score.py \
+    --data_dir data/hindi \
+    --pred outputs/hindi_predictions.csv
+```
+
+---
+
+
+Model Used: Random Forest Classifier
+
+## Future Improvements
+
+Potential enhancements include:
+
+- Gradient Boosting (XGBoost / LightGBM)
+- Temporal sequence models (LSTM or Transformer)
+- Additional prosodic and spectral features
+- Speaker adaptation
+- Online real-time inference optimization
+
+---
