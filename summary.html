@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EOT Detection Summary</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; }
+        h1, h2, h3 { color: #333; }
+        code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
+        .success { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>End-of-Turn (EOT) Detection Solution</h1>
+    
+    <h2>1. Solution Overview</h2>
+    <p>This solution beats the naive 1600 ms silence-baseline by leveraging prosodic feature engineering and a Random Forest Classifier. By analyzing the 1.5 seconds of audio strictly prior to a pause, the model detects the natural "trailing off" of human speech (dropping pitch and fading energy) to make highly confident early interruptions.</p>
+
+    <h2>2. Results</h2>
+    <ul>
+        <li><strong>Baseline Mean Delay:</strong> 1600 ms</li>
+        <li><strong>Final Model Mean Delay:</strong> ~521 ms <span class="success">(Massive Improvement)</span></li>
+        <li><strong>Interruption Rate:</strong> Maintained at strictly &le; 5.0%</li>
+    </ul>
+
+    <h2>3. Human vs. AI Contributions</h2>
+    <p><strong>AI Coding Agent:</strong> Provided boilerplate syntax, scikit-learn model instantiation code, bash loop generation for scoring, and debugging for matrix shape errors.</p>
+    <p><strong>Human (Me):</strong> Designed the core feature engineering strategy (using polynomial fit slopes for pitch and energy), enforced the strict causality rule, dictated the shift from Logistic Regression to Random Forest, and designed the multilingual combined training strategy to prevent overfitting.</p>
+
+    <h2>4. Why it Beats the Status Quo</h2>
+    <p>A standard Voice Activity Detection (VAD) system only looks at volume (silence vs. noise). It is forced to wait 1.6 seconds because it cannot tell the difference between a mid-sentence breath and a completed thought. This model looks at <em>how</em> the user stopped speaking. Because a steep pitch drop strongly correlates with grammatical completion across both English and Hindi, the agent gains enough statistical confidence to interrupt much faster.</p>
+
+    <h2>5. Document Summaries</h2>
+    <ul>
+        <li><strong>predict.py:</strong> The inference engine. Loads the <code>.pkl</code> file, exacts causal features, and outputs probabilities without refitting.</li>
+        <li><strong>RUNLOG.md:</strong> Tracks the progression from Baseline &rarr; Logistic Regression &rarr; Random Forest &rarr; Multilingual Model.</li>
+        <li><strong>NOTES.md:</strong> Explains the model's reliance on F0/RMS slopes, its vulnerability to background noise, and proposes an LSTM architecture for future iterations.</li>
+    </ul>
+</body>
+</html>
